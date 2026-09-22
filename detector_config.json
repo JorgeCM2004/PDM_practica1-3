@@ -1,0 +1,16 @@
+{
+  "development_sequence": "20241126_0024_crossing1_09",
+  "development_frames": [
+    0,
+    40,
+    80,
+    120,
+    160
+  ],
+  "selection_metric": "F1 at BEV IoU 0.5",
+  "parameters": {
+    "eps": 1.0,
+    "min_points": 3,
+    "complete_boxes": true
+  }
+}

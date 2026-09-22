@@ -11,3 +11,5 @@ wheels/
 
 # Dataset
 data/
+results/
+.uv-cache/
