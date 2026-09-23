@@ -8,8 +8,6 @@ asociación temporal, estimación de velocidades ni conteo de vehículos únicos
 
 ### Exposición sin ejecutar código
 
-- `Ver_videos.html`: reproductor de las tres secuencias con pausa, cámara lenta
-  y avance fotograma a fotograma. Mantener a su lado la carpeta `results/videos`.
 - `results/videos/*.mp4`: vídeos cenitales de 200 fotogramas, 10 fps y 20 segundos.
   Nube LiDAR a la izquierda; cajas y conteo estimado a la derecha, sin tracking.
 - `Presentacion_UrbanIng_V2X.ipynb`: notebook ya ejecutado, con explicaciones,
@@ -29,11 +27,19 @@ Para regenerar los vídeos después de ejecutar `main.py`:
 
 ```powershell
 uv run --extra video python render_video.py
-uv run python video_gallery.py
 ```
 
 El vídeo conserva los tiempos y cajas guardados en `detections.jsonl`; no suaviza,
 interpola ni asocia detecciones entre instantes. El conteo es una estimación.
+Ambas vistas conservan el fondo original: suelo gris y puntos elevados azul claro.
+En la derecha, todos los clústeres aceptados y sus cajas se destacan en naranja. Se colorean
+los puntos realmente usados por el detector después de unir fragmentos y filtrar
+candidatos, no todos los puntos que caen dentro de una caja. El color solo indica
+detección; no representa identidades persistentes.
+Para recuperar esa pertenencia, el exportador vuelve a ejecutar el detector con
+la configuración guardada y comprueba que las cajas coincidan con las existentes.
+Los puntos recuperados se guardan en `results/videos/clusters/` para reutilizarlos
+en cambios de estilo; la caché se invalida si cambian los datos o el detector.
 
 ### Scripts del proyecto
 

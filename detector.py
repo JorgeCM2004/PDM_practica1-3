@@ -80,7 +80,7 @@ def box_from_cluster(points, plane, ground, complete=True, lanes=None, yaw_overr
             'class': 'vehicle_candidate', 'num_points': len(points)}
 
 
-def resolve_fragments(groups, plane, ground, lanes, config):
+def resolve_fragments(groups, plane, ground, lanes, config, include_cluster_points=False):
     """Fusión espacial de fragmentos y completado sin invadir cajas con más evidencia.
 
     Solo usa puntos del instante actual. No usa etiquetas ni asociaciones temporales.
@@ -159,12 +159,18 @@ def resolve_fragments(groups, plane, ground, lanes, config):
             continue
         chosen['fragments_merged'] = fragments
         chosen['overlap_resolved'] = chosen is not original
+        if include_cluster_points:
+            chosen['_cluster_points'] = group
         kept.append(chosen)
         polygons.append(p)
     return kept
 
 
-def detect_improved(points, roi, voxel, road, config=None, lanes=None):
+def detect_improved(points, roi, voxel, road, config=None, lanes=None, *, include_cluster_points=False):
+    """Devuelve opcionalmente los puntos exactos de cada candidato final para visualizar.
+
+    `_cluster_points` solo existe en memoria; no cambia las decisiones del detector.
+    """
     # Importación diferida evita dependencia circular con la CLI.
     from main import voxelize, ground_plane, clusters
     config = {**DEFAULTS, **(config or {})}
@@ -177,7 +183,7 @@ def detect_improved(points, roi, voxel, road, config=None, lanes=None):
     foreground = points[(height>=config['min_height'])&(height<=4.5)&inside(points, road.buffer(0.5))]
     groups = list(clusters(foreground, config['eps'], config['min_points']))
     if config.get('spatial_refinement', True):
-        boxes = resolve_fragments(groups, plane, ground, lanes, config)
+        boxes = resolve_fragments(groups, plane, ground, lanes, config, include_cluster_points)
         return points, filter_boxes(boxes, road), plane
     boxes = []
     for group in groups:
@@ -187,6 +193,8 @@ def detect_improved(points, roi, voxel, road, config=None, lanes=None):
         length, width = box['observed_dimensions_xy']
         height = box['dimensions'][2]
         if config['min_length']<=length<=18 and config['min_width']<=width<=3.5 and 0.65<=height<=4.5:
+            if include_cluster_points:
+                box['_cluster_points'] = group
             boxes.append(box)
     boxes = filter_boxes(boxes, road)
     # Supresión de cajas duplicadas por fragmentos; no usa identidades temporales.

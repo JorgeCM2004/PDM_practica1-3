@@ -22,8 +22,10 @@ def gallery(root=Path('.'), embed=False):
 </div></section>''')
     return '''<div style="font-family:Arial,sans-serif">
 <p>200 fotogramas por secuencia · 10 fps · 20 segundos · sin tracking.</p>
-<p>Izquierda: nube LiDAR. Derecha: cajas y conteo estimado del instante.
+<p>Izquierda: nube LiDAR con el fondo original. Derecha: clústeres detectados, cajas y conteo estimado del instante.
 Puedes pausar, cambiar la velocidad y ampliar a pantalla completa.</p>
+<p>Todos los clústeres aceptados y sus cajas se muestran en naranja. Se conserva el fondo original: suelo gris y otros puntos elevados azul claro.
+El color indica detección; no identifica vehículos ni realiza tracking.</p>
 '''+''.join(cards)+'''</div><script>
 function stepFrame(id, direction) {
  const v=document.getElementById(id); v.pause();
@@ -31,12 +33,3 @@ function stepFrame(id, direction) {
  v.currentTime=(Math.max(0,Math.min(199,frame+direction))+0.01)/10;
 }
 </script>'''
-
-
-if __name__ == '__main__':
-    body=gallery()
-    Path('Ver_videos.html').write_text('''<!doctype html><html lang="es"><meta charset="utf-8">
-<title>UrbanIng-V2X · Vídeos</title><style>
-body{background:#09101a;color:#e2ebf3;max-width:1500px;margin:32px auto;padding:0 24px;font-family:Arial}
-button,select{padding:9px 14px;font-size:16px;cursor:pointer}h1{font-size:30px}
-</style><h1>Vehículos en la intersección</h1>'''+body+'</html>',encoding='utf-8')
