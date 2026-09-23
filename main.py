@@ -173,7 +173,7 @@ def main():
     from detector import DEFAULTS, detect_improved
     config = DEFAULTS.copy()
     if args.method == 'improved':
-        config.update(json.loads(args.config.read_text())['parameters'])
+        config.update(json.loads(args.config.read_text(encoding='utf-8'))['parameters'])
     args.voxel = args.voxel if args.voxel is not None else (0.15 if args.method == 'improved' else 0.2)
     args.eps = args.eps if args.eps is not None else (config['eps'] if args.method == 'improved' else 0.7)
     args.min_points = args.min_points if args.min_points is not None else (config['min_points'] if args.method == 'improved' else 8)

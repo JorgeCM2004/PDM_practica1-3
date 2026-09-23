@@ -11,6 +11,11 @@
   "parameters": {
     "eps": 1.0,
     "min_points": 3,
-    "complete_boxes": true
-  }
+    "complete_boxes": true,
+    "spatial_refinement": true,
+    "merge_fragments": true,
+    "resolve_overlap": true,
+    "nms_overlap": 0.5
+  },
+  "revision_notes": "Fusión geométrica de fragmentos y completado de cajas penalizando solapamientos. Reglas comprobadas en los cinco fotogramas de desarrollo; el fotograma 100 de 20241126_0008_crossing1_01 se inspeccionó para diagnosticar errores y no es una prueba ciega."
 }

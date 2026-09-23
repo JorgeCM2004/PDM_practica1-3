@@ -6,6 +6,37 @@ asociación temporal, estimación de velocidades ni conteo de vehículos únicos
 
 ## Ejecutar
 
+### Exposición sin ejecutar código
+
+- `Ver_videos.html`: reproductor de las tres secuencias con pausa, cámara lenta
+  y avance fotograma a fotograma. Mantener a su lado la carpeta `results/videos`.
+- `results/videos/*.mp4`: vídeos cenitales de 200 fotogramas, 10 fps y 20 segundos.
+  Nube LiDAR a la izquierda; cajas y conteo estimado a la derecha, sin tracking.
+- `Presentacion_UrbanIng_V2X.ipynb`: notebook ya ejecutado, con explicaciones,
+  fusión y filtrado de los cuatro LiDAR, detección, vídeos y conteo por fotograma
+  en las tres secuencias.
+- `Presentacion_UrbanIng_V2X.html`: la misma exposición con el código oculto;
+  se abre directamente en un navegador, sin Jupyter ni ejecución.
+
+Las figuras, vídeos y salidas están incrustados en ambos archivos de presentación. Para presentarlos
+no hacen falta los datos ni ejecutar celdas. El notebook muestra los conteos de las
+tres secuencias guardadas y una demostración real de detección en un fotograma.
+Si se desea reejecutarlo, hacerlo desde la carpeta del proyecto, con los datos y
+resultados disponibles, e instalar las dependencias opcionales con
+`uv sync --extra notebook`. No son necesarias para ejecutar los scripts habituales.
+
+Para regenerar los vídeos después de ejecutar `main.py`:
+
+```powershell
+uv run --extra video python render_video.py
+uv run python video_gallery.py
+```
+
+El vídeo conserva los tiempos y cajas guardados en `detections.jsonl`; no suaviza,
+interpola ni asocia detecciones entre instantes. El conteo es una estimación.
+
+### Scripts del proyecto
+
 Desde la carpeta del proyecto:
 
 ```powershell
@@ -22,7 +53,7 @@ las anotaciones en `data/labels/` y el mapa en `data/crossings_lanelet2map.osm`.
 La ejecución completa procesa 200 fotogramas por secuencia (600 en total):
 
 - `20241126_0024_crossing1_09`: desarrollo y ajuste.
-- `20241126_0008_crossing1_01`: validación sin ajuste de parámetros.
+- `20241126_0008_crossing1_01`: evaluación; fotograma 100 inspeccionado en la revisión.
 - `20241127_0000_crossing1_00`: validación sin ajuste de parámetros.
 
 Ejemplos de selección:
@@ -38,7 +69,6 @@ uv run python evaluate.py --results results/sample
 - `main.py`: ejecución, lectura de LiDAR y visualización.
 - `detector.py`, `road.py` y `detector_config.json`: detección y máscara vial.
 - `evaluate.py`: comparación con las anotaciones.
-- `report_results.py`: informe y gráficas del método original frente al final.
 - `download_dataset.py` y `extract_dataset.py`: preparación de datos.
 - `pyproject.toml` y `uv.lock`: dependencias reproducibles.
 - `VALIDATION.md`: resultados y limitaciones de la solución.
@@ -60,12 +90,17 @@ para las comparativas (`baseline`) y los informes e imágenes de la entrega.
    devkit derivado de estados y etiquetas.
 6. Agrupa puntos elevados mediante DBSCAN en XY. El área de agrupamiento conserva
    0,5 m de contexto alrededor de la máscara; acepta cajas cuyo centro está en ella.
-7. Ajusta rectángulos orientados. Para observaciones pequeñas o estrechas usa el
-   eje del carril cercano. Completa las huellas parciales con una dimensión mínima
-   de 4 × 1,8 m, expandiendo la cara oculta en sentido opuesto al mástil cercano.
-   Es una hipótesis geométrica, no una medida exacta de la carrocería oculta.
-8. Filtra tamaños y suprime cajas que se solapan mucho con otra con más puntos.
-   La base de cada caja sigue el suelo local; su altura se estima con los puntos.
+7. Une fragmentos con orientación compatible cuando sus cajas se solapan y sus
+   puntos forman una única huella de dimensiones plausibles. No basta con que
+   estén cerca: se comprueban distancia, orientación y dimensiones de la unión.
+8. Ajusta rectángulos orientados. Para observaciones pequeñas o estrechas usa el
+   eje del carril cercano. Puede completar una huella parcial hasta 4 × 1,8 m,
+   pero compara distintas posiciones y, con poco soporte, la dirección perpendicular.
+   Todas las propuestas conservan los puntos XY observados. Se penaliza invadir
+   cajas con mayor soporte; no se desplazan cajas manualmente para la presentación.
+9. Filtra tamaños y suprime duplicados con solapamiento fuerte restante. La base
+   sigue el suelo local y la altura se estima con los puntos. Estas reglas son
+   hipótesis geométricas, no medidas de la carrocería oculta ni garantías de acierto.
 
 El mapa es información estática auxiliar, no un sensor adicional. El detector no
 lee cámaras, LiDAR de vehículos, estados de vehículos ni anotaciones. Los vehículos
@@ -73,7 +108,11 @@ parados se procesan igual que los demás; no se elimina el fondo por persistenci
 
 `detector_config.json` guarda los parámetros finales. Se eligieron comparando seis
 combinaciones en los fotogramas 0, 40, 80, 120 y 160 de la primera secuencia, según
-F1 con IoU BEV 0,5. Las otras dos secuencias se reservaron para validación.
+F1 con IoU BEV 0,5. Las reglas espaciales se comprobaron en esos fotogramas. Además,
+el fotograma 100 de `20241126_0008_crossing1_01` se inspeccionó para diagnosticar las
+cajas superpuestas del notebook: ese fotograma ya no constituye una prueba ciega.
+La comparación completa es una regresión sobre estas secuencias, no una garantía
+de generalización a nuevos cruces.
 
 ## Evaluación y comparación
 
@@ -81,7 +120,6 @@ F1 con IoU BEV 0,5. Las otras dos secuencias se reservaron para validación.
 uv run python main.py --method baseline --output results/baseline --preview-every 0
 uv run python evaluate.py --results results/baseline
 uv run python evaluate.py --results results/improved --point-support --support-step 10
-uv run python report_results.py
 ```
 
 La evaluación convierte las etiquetas del formato del dataset a instantes en ms.
@@ -109,7 +147,7 @@ El evaluador rechaza resultados incompletos, timestamps repetidos o desalineados
 `--support-step 10` calcula ese diagnóstico en 60 fotogramas de los 600, manteniendo
 las métricas principales sobre todos ellos. El valor 1 analiza el soporte en todos.
 
-Consultar `VALIDATION.md` y `results/REPORT.md` tras generar el informe. Los resultados
+Consultar los informes guardados en `VALIDATION.md` y `results/REPORT.md`. Los resultados
 sobre la secuencia de desarrollo no deben presentarse como generalización independiente.
 
 ## Salidas

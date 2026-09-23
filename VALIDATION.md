@@ -9,26 +9,26 @@ Las anotaciones de referencia incluyen vehículos ocluidos; no se eliminan para 
 | Método | Precisión | Recall | F1 | Error absoluto medio del conteo |
 |---|---:|---:|---:|---:|
 | baseline | 70.1% | 35.0% | 0.467 | 15.49 vehículos/frame |
-| improved | 81.5% | 52.4% | 0.638 | 11.06 vehículos/frame |
+| improved | 84.9% | 57.2% | 0.684 | 10.10 vehículos/frame |
 
 ## Recall por clase en validación
 
 | Clase | Original | Mejorado |
 |---|---:|---:|
-| Car | 32.3% | 54.9% |
+| Car | 32.3% | 58.8% |
 | Truck | 73.5% | 51.0% |
-| Van | 52.4% | 51.2% |
+| Van | 52.4% | 72.6% |
 | Bus | 29.1% | 25.6% |
 
-La mejora agregada se concentra en turismos. El recall de camiones, autobuses y furgonetas retrocede; el ajuste geométrico no mejora todas las clases.
+Clases cuyo recall retrocede frente al original: Truck, Bus. La mejora no es uniforme.
 
 ## Resultado por secuencia (mejorado)
 
 | Secuencia | Uso | Frames | Precisión | Recall | MAE conteo |
 |---|---|---:|---:|---:|---:|
-| 20241126_0024_crossing1_09 | ajuste | 200 | 80.5% | 50.6% | 18.07 |
-| 20241126_0008_crossing1_01 | validación | 200 | 81.3% | 53.4% | 11.46 |
-| 20241127_0000_crossing1_00 | validación | 200 | 81.8% | 51.1% | 10.68 |
+| 20241126_0024_crossing1_09 | ajuste | 200 | 82.9% | 53.7% | 17.11 |
+| 20241126_0008_crossing1_01 | validación | 200 | 86.6% | 58.4% | 10.88 |
+| 20241127_0000_crossing1_00 | validación | 200 | 83.0% | 55.9% | 9.31 |
 
 ## Límites de la solución
 
@@ -36,6 +36,6 @@ La mejora se mide sobre detecciones reales; no es un conteo exacto. Persisten om
 El detector no asigna clases específicas. La evaluación incluye Car, Van, Bus, Truck, Trailer, OtherVehicle y Motorcycle; las motos no tienen un modelo especializado y pueden quedar sin detectar.
 Los números de las vistas cenitales solo identifican cajas dentro de esa imagen. No se estiman trayectorias, velocidades ni vehículos únicos.
 
-Los parámetros se eligieron con los fotogramas 0, 40, 80, 120 y 160 de la primera secuencia, por F1 a IoU 0,5. Las otras dos no se usaron para ajustarlos.
+Los parámetros de agrupamiento se eligieron con los fotogramas 0, 40, 80, 120 y 160 de la primera secuencia, por F1 a IoU 0,5. En la revisión de cajas se inspeccionó también el fotograma 100 de 20241126_0008_crossing1_01; no debe considerarse una prueba ciega. Esta comparación es una regresión sobre las secuencias disponibles.
 
 ![Conteos](results/counts_comparison.png)
